@@ -2,15 +2,16 @@ import { serveStatic } from "@hono/node-server/serve-static";
 
 const isProduction = process.env.NODE_ENV === "production";
 
-import { stream } from "hono/streaming";
-
-startServer();
-
 import { HttpBindings, serve } from "@hono/node-server";
 import { Hono } from "hono";
+import { stream } from "hono/streaming";
 import { renderPage } from "vike/server";
 import { ViteDevServer } from "vite";
 import { attachWebsocketHandler } from "./server/websocket";
+
+startServer();
+
+console.log("Bun is running?", typeof Bun !== "undefined");
 
 async function startServer() {
   const app = new Hono<{ Bindings: HttpBindings }>();
@@ -21,7 +22,7 @@ async function startServer() {
       "/*",
       serveStatic({
         root: `./dist/client/`,
-      })
+      }),
     );
   } else {
     // Instantiate Vite's development server and integrate its middleware to our server.
@@ -34,6 +35,7 @@ async function startServer() {
       appType: "custom",
       base: "/",
     });
+
     app.use(async (c, next) => {
       const viteDevMiddleware = () =>
         new Promise<void>((resolve) => {
@@ -82,7 +84,7 @@ async function startServer() {
         });
         // END SECTION Without Streaming
       }
-    }
+    },
   );
 
   const server = serve(
@@ -92,7 +94,7 @@ async function startServer() {
     },
     (info) => {
       console.log("Server running at", info.port);
-    }
+    },
   );
 
   attachWebsocketHandler(server);
